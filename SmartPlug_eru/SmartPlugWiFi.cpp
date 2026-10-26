@@ -34,6 +34,7 @@ bool connectWiFi() {
 
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);     // modem sleep adds 100-300 ms latency
+  lastWiFiReconnectAttempt = millis();
   if(!beginSavedWiFi()) return false;
 
   unsigned long start = millis();
@@ -81,7 +82,10 @@ void maintainWiFi() {
 
   unsigned long now = millis();
 
-  if (now - lastWiFiReconnectAttempt < WIFI_RECONNECT_INTERVAL) {
+  // PEAP can take considerably longer than personal Wi-Fi. Restarting it
+  // every 10 seconds can repeatedly interrupt the authentication handshake.
+  const unsigned long retryInterval = wifiAuthMode == "PEAP" ? 90000UL : WIFI_RECONNECT_INTERVAL;
+  if (now - lastWiFiReconnectAttempt < retryInterval) {
     return;
   }
 

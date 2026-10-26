@@ -104,11 +104,13 @@ void setup() {
   // Start the same HTTP server in STA mode too
   configureWebServer();
 
-  if (!wifiOK) {
-    // The saved network is unreachable. Open the setup hotspot so a phone
-    // or computer can enter a different Wi-Fi without the GPIO19 button.
-    Serial.println("[WIFI] Saved network failed. Starting PLUG_SETUP.");
+  if (!wifiOK && wifiSSID.length() == 0) {
+    // A new device needs provisioning. An already configured device must
+    // keep retrying its saved network after a temporary startup failure.
+    Serial.println("[WIFI] No saved network. Starting setup hotspot.");
     startSetupAP();
+  } else if (!wifiOK) {
+    Serial.println("[WIFI] Saved network unavailable; background retries enabled. Hold SETUP to change networks.");
   }
 
   // Wi-Fi provides entropy before generating the runtime WebSocket token.

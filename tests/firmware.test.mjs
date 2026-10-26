@@ -5,6 +5,47 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
+test('saved enterprise Wi-Fi retries without interrupting authentication or manual setup',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'eru-wifi-recovery-'));
+  try {
+    const code=`#include <string>
+#include <cstdint>
+#include <cassert>
+using String=std::string;
+uint32_t tick=0,lastWiFiReconnectAttempt=0;
+uint32_t millis(){return tick;}
+const uint32_t WIFI_RECONNECT_INTERVAL=10000;
+const int WL_CONNECTED=3,WIFI_LED_PIN=13,HIGH=1,LOW=0;
+bool setupApActive=false,cloudOnline=true;
+String wifiSSID="Kelani_WiFi",wifiAuthMode="PEAP";
+int led=-1,attempts=0,disconnects=0;
+void digitalWrite(int,int value){led=value;}
+struct Log{void println(const char*){}} Serial;
+struct Network{int state=0;int status(){return state;}void disconnect(){disconnects++;}} WiFi;
+bool beginSavedWiFi(){attempts++;return true;}
+${fn('SmartPlugWiFi.cpp','maintainWiFi').replaceAll('unsigned long','uint32_t')}
+int main(){
+  tick=10000;maintainWiFi();assert(attempts==0&&!cloudOnline);
+  tick=89999;maintainWiFi();assert(attempts==0);
+  tick=90000;maintainWiFi();assert(attempts==1&&disconnects==1);
+  tick=100000;maintainWiFi();assert(attempts==1);
+  tick=180000;maintainWiFi();assert(attempts==2);
+  WiFi.state=WL_CONNECTED;tick=300000;maintainWiFi();assert(attempts==2&&led==HIGH);
+  WiFi.state=0;setupApActive=true;maintainWiFi();assert(attempts==2);
+  setupApActive=false;wifiSSID="";maintainWiFi();assert(attempts==2);
+  wifiSSID="Personal network";wifiAuthMode="PERSONAL";lastWiFiReconnectAttempt=tick;
+  tick+=9999;maintainWiFi();assert(attempts==2);
+  tick++;maintainWiFi();assert(attempts==3);
+  wifiAuthMode="PEAP";lastWiFiReconnectAttempt=UINT32_MAX-44999;
+  tick=44999;maintainWiFi();assert(attempts==3);
+  tick++;maintainWiFi();assert(attempts==4);
+}`;
+    writeFileSync(join(dir,'recovery.cpp'),code);
+    execFileSync(process.env.CXX||'clang++',['-std=c++17',join(dir,'recovery.cpp'),'-o',join(dir,'recovery')],{stdio:'pipe'});
+    execFileSync(join(dir,'recovery'),[],{stdio:'pipe'});
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
 function fn(file, name) {
   const source=readFileSync(new URL('../SmartPlug_eru/'+file,import.meta.url),'utf8');
   const start=source.indexOf(`void ${name}(`)>=0?source.indexOf(`void ${name}(`):source.indexOf(`bool ${name}(`);
