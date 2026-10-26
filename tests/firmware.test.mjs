@@ -30,7 +30,7 @@ struct Log { template<class T> void print(T){} template<class T> void println(T)
 void updateOutputIndicators(){} void beep(int,int){} void saveSettings(){} void flushSettings(){}
 bool actualPowerState=false,plugTripped=false,maintenanceMode=false,plugOverrideActive=false,fallbackMode=false;
 bool humanDetected=true,maxOnEnabled=true;
-unsigned long lastOutboxBuild=0,powerOnStartTime=0,plugOverrideStart=0,lastHumanTime=0,humanOnSeconds=10,maxOnSeconds=2;
+unsigned long powerOnStartTime=0,plugOverrideStart=0,lastHumanTime=0,humanOnSeconds=10,maxOnSeconds=2;
 bool telemetryUrgent=false; String powerReason,mode="AUTO";
 std::atomic<bool> controllerStallTrip{false};std::atomic<uint32_t> controllerHeartbeat{0};
 bool bmi160Detected=true,bmi160Healthy=true,ironFault=false,ironPowerState=false,ironTripped=false,ironMotionDetected=true,ironMaxOnEnabled=true;

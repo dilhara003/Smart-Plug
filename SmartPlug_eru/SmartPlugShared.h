@@ -49,18 +49,6 @@ enum RGBColor { RGB_OFF, RGB_RED, RGB_GREEN, RGB_BLUE, RGB_YELLOW, RGB_CYAN, RGB
 
 struct CloudData {
   bool valid = false;
-  String mode;
-  String power;
-  int pir = 1;
-  unsigned long humanOn = 300;
-  unsigned long delaySec = 0;
-  bool maxEn = false;
-  unsigned long maxSec = 7200;
-  String ironMode = "OFF";
-  String ironPower = "OFF";
-  unsigned long ironTimeout = 300;
-  bool ironMaxEn = false;
-  unsigned long ironMaxSec = 7200;
   String commandId, target, action, args;
   uint32_t receivedAt = 0, ttlMs = 0;
 };
@@ -68,13 +56,10 @@ struct CloudData {
 extern const char* SUPABASE_URL;
 extern const char* SUPABASE_KEY;
 extern String deviceID, deviceSecret, claimCode;
-extern const char* SETUP_AP_NAME;
-extern const char* SETUP_AP_PASSWORD;
 extern const char* LOCAL_WEB_USERNAME;
-extern const char* LOCAL_WEB_PASSWORD;
 extern const unsigned long WIFI_RECONNECT_INTERVAL, WIFI_CONNECT_TIMEOUT;
 extern bool setupApActive;
-extern const unsigned long CLOUD_GET_INTERVAL, CLOUD_PATCH_INTERVAL, PIR_SAMPLE_INTERVAL;
+extern const unsigned long PIR_SAMPLE_INTERVAL;
 extern const unsigned long BUTTON_DEBOUNCE_MS, LONG_PRESS_MS, RESET_LONG_PRESS_MS;
 extern const uint8_t POWER_CYCLE_LIMIT;
 extern const unsigned long POWER_CYCLE_RESET_TIME;
@@ -117,12 +102,8 @@ extern SemaphoreHandle_t cloudMutex;
 extern CloudData cloudIncoming;
 extern bool cloudIncomingReady;
 extern String outboxPayload;
-extern bool outboxPending, outboxIsFull;
-extern uint32_t outboxSeq, ackedSeq;
-extern std::atomic<bool> cloudRegistered, cloudOnline, requestFullPush, deviceOwned, localDirty;
-extern volatile uint32_t localChangeSeq;
-extern CloudData cloudLastSeen;
-extern unsigned long lastOutboxBuild;
+extern bool outboxPending;
+extern std::atomic<bool> cloudRegistered, cloudOnline, deviceOwned;
 extern bool plugTripped, ironTripped, maintenanceMode, plugOverrideActive;
 extern unsigned long plugOverrideStart;
 extern String bootID, localSessionToken, setupApName, setupApPassword;

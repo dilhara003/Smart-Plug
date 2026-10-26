@@ -22,5 +22,5 @@ for(const width of [320,390,1440])test(`responsive layout at ${width}px`,async({
   await expect(page.getByRole('heading',{name:'Your space, at a glance.'})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
   if(width<800){await page.getByRole('button',{name:'Open navigation'}).click();await page.getByRole('navigation',{name:'Main navigation'}).getByRole('button',{name:/^Devices/}).click();await expect(page.getByRole('heading',{name:'A home for every device.'})).toBeVisible();}
-  await page.screenshot({path:`artifacts/dashboard-${width}.png`,fullPage:true});
+  await page.screenshot({path:`artifacts/dashboard-${width}.png`,fullPage:true,animations:'disabled'});
 });

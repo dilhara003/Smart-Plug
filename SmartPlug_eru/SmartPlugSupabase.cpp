@@ -133,6 +133,14 @@ bool cloudFetch() {
   if (state.length()==0) return false;
   JsonDocument d,s,a;
   if (deserializeJson(s,state)) return false;
+  // The independent monitor can drop GPIOs while loop() is stalled. Never keep
+  // reporting the cached pre-trip ON state as a fresh cloud heartbeat.
+  if(controllerStallTrip.load()) {
+    s["power_state"]="OFF"; s["iron_power_state"]="OFF";
+    s["plug_tripped"]=true; s["iron_tripped"]=true; s["maintenance"]=true;
+    s["power_reason"]="Control response timeout; restart required";
+    s["iron_power_reason"]="Control response timeout; restart required";
+  }
   d["p_device_id"]=deviceID; d["p_secret"]=deviceSecret; d["p_boot_id"]=bootID; d["p_state"]=s;
   if (ack.length() && !deserializeJson(a,ack)) d["p_ack"]=a;
   String body,response; serializeJson(d,body);

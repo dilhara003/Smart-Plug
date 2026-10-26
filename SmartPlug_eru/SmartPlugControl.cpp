@@ -112,7 +112,10 @@ bool executeCommand(bool iron, const String& action, JsonObject args, String& re
     else mode="MANUAL";
     setRelay(true, "Manual ON");
   }
-  saveSettings(); reason="Output ON"; return true;
+  saveSettings();
+  bool applied=iron?ironPowerState:actualPowerState;
+  reason=applied?"Output ON":iron?ironPowerReason:powerReason;
+  return applied;
 }
 
 bool updateButton(ButtonState& button, int pin) {

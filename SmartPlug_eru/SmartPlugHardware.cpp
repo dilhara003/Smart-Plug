@@ -2,9 +2,6 @@
 
 void markLocalChange() {
   telemetryUrgent = true;
-  localChangeSeq++;
-  localDirty = true;
-  lastOutboxBuild = 0;      // queue a push immediately
 }
 
 String createDeviceID() {
@@ -146,8 +143,7 @@ void setRelay(bool state, const String& reason) {
   actualPowerState = state;
   telemetryUrgent = true;
 
-  // Report the new real state to the cloud right away
-  lastOutboxBuild = 0;
+  // telemetryUrgent queues a device-reported state change.
 
   digitalWrite(RELAY1_PIN, state ? RELAY_ON : RELAY_OFF);
 

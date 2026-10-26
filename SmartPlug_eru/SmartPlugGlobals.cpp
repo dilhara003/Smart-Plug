@@ -1,9 +1,8 @@
 #include "SmartPlugShared.h"
 
-// Global state from the original V6.6 sketch.
+// Shared controller state and hardware constants.
 extern const char* SUPABASE_URL = ERU_SUPABASE_URL;
 extern const char* SUPABASE_KEY = ERU_SUPABASE_PUBLISHABLE_KEY;
-
 
 // ============================================================
 // ===================== PAGE 2 - DEVICE IDENTITY AND PIN MAP =====================
@@ -14,56 +13,36 @@ String deviceID;
 String deviceSecret;    // random, stored in flash, never displayed
 String claimCode;       // 8 chars, shown on LCD while unclaimed
 
-
 // ============================================================
 // PINS
 // ============================================================
-
-
-
-
-
-
-
-
 
 // ============================================================
 // RELAY LOGIC
 // ============================================================
 
-
-
 // ============================================================
 // WIFI SETUP
 // ============================================================
 
-extern const char* SETUP_AP_NAME = "PLUG_SETUP";
-// CHANGE BOTH PASSWORDS BEFORE SELLING / DEPLOYING THE PRODUCT.
-extern const char* SETUP_AP_PASSWORD = "12345678";  // hotspot password (8+ chars)
+// Setup and initial local credentials are generated per device.
 extern const char* LOCAL_WEB_USERNAME = "admin";
-extern const char* LOCAL_WEB_PASSWORD = "12345678";  // change to your own unique password
 
 extern const unsigned long WIFI_RECONNECT_INTERVAL = 10000UL;
 extern const unsigned long WIFI_CONNECT_TIMEOUT = 20000UL;
 
 bool setupApActive = false;     // true while the PLUG_SETUP hotspot is on
 
-
 // ============================================================
 // ===================== PAGE 3 - TIMING AND DEVICE CONFIGURATION =====================
 // CLOUD TIMING
 // ============================================================
-
-extern const unsigned long CLOUD_GET_INTERVAL = 1000UL;      // how fast app commands reach the plug
-extern const unsigned long CLOUD_PATCH_INTERVAL = 10000UL;   // telemetry heartbeat
-
 
 // ============================================================
 // SENSOR TIMING
 // ============================================================
 
 extern const unsigned long PIR_SAMPLE_INTERVAL = 50UL;
-
 
 // ============================================================
 // BUTTON
@@ -73,14 +52,12 @@ extern const unsigned long BUTTON_DEBOUNCE_MS = 20UL;
 extern const unsigned long LONG_PRESS_MS = 700UL;          // POWER button hold
 extern const unsigned long RESET_LONG_PRESS_MS = 1500UL;   // RESET button hold
 
-
 // ============================================================
 // POWER CYCLE FALLBACK
 // ============================================================
 
 extern const uint8_t POWER_CYCLE_LIMIT = 3;
 extern const unsigned long POWER_CYCLE_RESET_TIME = 30000UL;
-
 
 // ============================================================
 // ACS712
@@ -91,13 +68,11 @@ extern const float ADC_DIVIDER_RATIO = 22.0f / (12.0f + 22.0f);
 float acsZeroVoltage = 2.5f;
 extern const float CURRENT_DEADBAND = 0.10f;   // suppress no-load noise < 100 mA
 
-
 // ============================================================
 // APPROXIMATE POWER
 // ============================================================
 
 extern const float NOMINAL_VOLTAGE = 230.0f;
-
 
 // ============================================================
 // WEB SERVER
@@ -105,7 +80,6 @@ extern const float NOMINAL_VOLTAGE = 230.0f;
 
 WebServer setupServer(80);
 bool webServerStarted = false;
-
 
 // ============================================================
 // PREFERENCES
@@ -116,14 +90,12 @@ Preferences devicePrefs;
 Preferences cyclePrefs;
 Preferences identityPrefs;
 
-
 // ============================================================
 // WIFI
 // ============================================================
 
 String wifiSSID = "";
 String wifiPassword = "";
-
 
 // ============================================================
 // SETTINGS
@@ -136,7 +108,6 @@ unsigned long humanOnSeconds = 300;
 unsigned long detectionDelaySeconds = 0;
 bool maxOnEnabled = false;
 unsigned long maxOnSeconds = 7200;
-
 
 // ============================================================
 // ===================== PAGE 4 - SHARED STATE AND STATUS =====================
@@ -151,13 +122,11 @@ unsigned long lastHumanTime = 0;
 unsigned long powerOnStartTime = 0;
 String powerReason = "Startup";
 
-
 // ============================================================
 // FALLBACK
 // ============================================================
 
 bool fallbackMode = false;
-
 
 // ============================================================
 // CURRENT (written by currentTask, read by loop)
@@ -166,7 +135,6 @@ bool fallbackMode = false;
 float currentAmps = 0.0f;
 float estimatedPowerWatts = 0.0f;
 bool acsSensorPresent = false;
-
 
 // ============================================================
 // TIMERS
@@ -177,7 +145,6 @@ unsigned long lastWiFiReconnectAttempt = 0;
 unsigned long lastPirSample = 0;
 bool powerCycleCounterCleared = false;
 
-
 // ============================================================
 // DEFERRED FLASH SAVE
 // ============================================================
@@ -185,24 +152,14 @@ bool powerCycleCounterCleared = false;
 bool nvsSavePending = false;
 unsigned long nvsSaveTime = 0;
 
-
 // ============================================================
 // BUTTON STRUCTURE
 // ============================================================
-
-
-
-
-
-
-
-
 
 ButtonState powerButton;
 ButtonState resetButton;
 ButtonState upButton;
 ButtonState downButton;
-
 
 // ============================================================
 // LCD / MENU STATE
@@ -220,37 +177,13 @@ extern const unsigned long MENU_TIMEOUT_MS = 30000UL;
 extern const int MENU_ITEMS = 10;     // 0..5 editable, 6 IP, 7 status, 8 claim, 9 exit
 String lcdCache[2];
 
-
 // ============================================================
 // RGB COLORS
 // ============================================================
 
-
-
-
-
-
-
-
-
-
-
-
-
 // ============================================================
 // CLOUD SYNC STATE
 // ============================================================
-
-
-
-
-
-
-
-
-
-
-
 
 SemaphoreHandle_t cloudMutex = nullptr;
 
@@ -259,23 +192,13 @@ CloudData cloudIncoming;
 bool cloudIncomingReady = false;
 String outboxPayload;
 bool outboxPending = false;
-bool outboxIsFull = false;
-uint32_t outboxSeq = 0;
-uint32_t ackedSeq = 0;
 
 // simple flags written by cloudTask, read by loop()
 std::atomic<bool> cloudRegistered = false;
 std::atomic<bool> cloudOnline = false;
-std::atomic<bool> requestFullPush = false;   // set after a brand-new cloud record is created
 std::atomic<bool> deviceOwned = false;       // true once a user has claimed this plug
 
 // used by loop() only
-CloudData cloudLastSeen;
-std::atomic<bool> localDirty = false;        // local change not yet confirmed
-volatile uint32_t localChangeSeq = 0;
-unsigned long lastOutboxBuild = 0;
-
-
 
 // Called whenever the USER changes something locally
 

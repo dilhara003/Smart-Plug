@@ -15,6 +15,9 @@ export function useWorkspace(userId: string | undefined, demo: boolean) {
   const [sending, setSending] = useState(false);
   const selectedRef = useRef(selected); selectedRef.current = selected;
   const generation = useRef(0);
+  useEffect(() => {
+    if (!demo) { setDevices([]); setSelected(''); setCommands([]); setEvents([]); setSamples([]); setLoading(true); }
+  }, [userId, demo]);
   const refresh = useCallback(async () => {
     if (!userId || demo) return;
     const gen = ++generation.current;
