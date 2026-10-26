@@ -1,0 +1,14 @@
+node_modules/
+dist/
+artifacts/
+firmware-libs/
+.arduino-build/
+.env
+.env.local
+.env.*.local
+SmartPlug_eru/SmartPlugConfig.local.h
+test-results/
+playwright-report/
+.DS_Store
+*.log
+.postman/

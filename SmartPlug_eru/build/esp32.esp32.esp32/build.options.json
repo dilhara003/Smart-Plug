@@ -1,0 +1,9 @@
+{
+  "additionalFiles": "../..,../..,../..,../..,../..,../..,../..,../..,../..,../..,../..,../..,../..,../..,../..",
+  "compiler.optimization_flags": "-Os",
+  "customBuildProperties": "",
+  "fqbn": "esp32:esp32:esp32:PartitionScheme=min_spiffs",
+  "hardwareFolders": "/Users/dilharabandara/Library/Arduino15/packages/esp32/hardware/esp32/3.3.10,/Users/dilharabandara/Library/Arduino15/packages/esp32/hardware/esp32/3.3.10",
+  "otherLibrariesFolders": "/Users/dilharabandara/My Projects/SmartPlug/firmware-libs,/Users/dilharabandara/Documents/Arduino/libraries",
+  "sketchLocation": "/Users/dilharabandara/My Projects/SmartPlug/SmartPlug_eru"
+}

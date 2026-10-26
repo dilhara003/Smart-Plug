@@ -1,0 +1,23 @@
+[
+  {
+    "name": "ArduinoJson",
+    "version": "7.3.2",
+    "url": "https://downloads.arduino.cc/libraries/github.com/bblanchon/ArduinoJson-7.3.2.zip",
+    "sha256": "75b39f5b0fa856b6ff36a60fc56a0ef0cab0365bed84efd3eaf95e6fc89d8776",
+    "folder": "ArduinoJson-7.3.2"
+  },
+  {
+    "name": "LiquidCrystal I2C",
+    "version": "1.1.2",
+    "url": "https://downloads.arduino.cc/libraries/github.com/johnrickman/LiquidCrystal_I2C-1.1.2.zip",
+    "sha256": "7f288f4aa7ad33a25122727b057e49c48ef5f0d3a4943b7aca33ed2b78982adb",
+    "folder": "LiquidCrystal_I2C-1.1.2"
+  },
+  {
+    "name": "WebSockets",
+    "version": "2.7.2",
+    "url": "https://downloads.arduino.cc/libraries/github.com/Links2004/WebSockets-2.7.2.zip",
+    "sha256": "cace4969401d5a015d3558fd501c7449a946beaa90b7313cc5b262014b54ae7e",
+    "folder": "WebSockets-2.7.2"
+  }
+]
