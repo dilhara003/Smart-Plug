@@ -47,7 +47,7 @@ For a fresh Arduino CLI installation:
 
 ```bash
 arduino-cli core update-index --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
-arduino-cli core install esp32:esp32@3.3.10 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+arduino-cli core install esp32:esp32@3.3.12 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
 npm run firmware:build
 ```
 
@@ -76,6 +76,25 @@ The helper uses Arduino CLI and the generated bootloader, partition table and ap
 If the bootloader does not respond, check the USB cable/serial driver and board port; some boards require holding BOOT while the uploader connects. Use a stable power supply. Do not diagnose a failed upload by manipulating live mains wiring.
 
 For Arduino IDE: open `SmartPlug_eru/SmartPlug_eru.ino`, install the library versions above using Library Manager, select **ESP32 Dev Module**, **4 MB**, and **Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)**, then verify/upload. Keep all `.cpp` and `.h` files with the sketch.
+
+## Kelani Wi-Fi / university username and password
+
+Firmware 1.0.1 supports university WPA2-Enterprise PEAP / MSCHAPv2. The university CA is embedded in `KelaniWiFiCA.h`, with server domain `kln.ac.lk` and certificate validity checks enabled. The CA was downloaded from https://rict.kln.ac.lk/images/Kelani_WiFi.cer; its validity is 10 September 2019 to 19 May 2033. See the official guide: https://rict.kln.ac.lk/images/Guidelines/How_to_connect_Kelani_WiFi__New.pdf.
+
+Keep your Mac connected to campus Wi-Fi. Close Arduino Serial Monitor, upload the new firmware, and run:
+
+```bash
+python3 scripts/flash_firmware.py --port /dev/cu.usbserial-0001
+python3 scripts/connect_kelani_wifi.py --port /dev/cu.usbserial-0001
+```
+
+The helper detects the advertised spelling of the campus SSID, asks for your **Kelani Net ID** and university Wi-Fi password, and provisions them directly over USB. Use the same username you use when joining campus Wi-Fi; it may differ from your full email address. Password input stays hidden in Terminal and is not written to source, shell arguments, logs or Supabase. No third-party Python package is required on macOS/Linux.
+
+The Mac's current time is also provisioned over USB, because certificate validity must be checked before Wi-Fi/NTP is available. The ESP32 saves a last-known clock baseline and updates it during operation. If a long-unpowered device rejects a newer server certificate, rerun the helper to refresh its clock; certificate verification is not bypassed.
+
+The helper prints `CONNECTED` and the local IP only after the ESP32 confirms a real Wi-Fi connection. The campus network must offer a reachable 2.4 GHz access point and allow your account/device. Campus client isolation may block Mac-to-ESP32 local IP access even when cloud control works. This firmware does not bypass university account or device restrictions.
+
+The `/wifi` setup page also has a Personal/PEAP selector and university username field. For Kelani Wi-Fi, choose PEAP; ordinary home networks continue to use Personal. Credentials remain in the device's existing NVS storage, not in the cloud. Reprovisioning enters maintenance and switches both outputs OFF before saving/restarting.
 
 ## First connection
 

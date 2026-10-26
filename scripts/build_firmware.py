@@ -12,13 +12,19 @@ import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-CORE = "esp32:esp32@3.3.10"
+CORE = "esp32:esp32@3.3.12"
 FQBN = "esp32:esp32:esp32:PartitionScheme=min_spiffs"
 cli = os.environ.get("ARDUINO_CLI") or shutil.which("arduino-cli")
 if not cli and Path("/Applications/Arduino IDE.app/Contents/Resources/app/lib/backend/resources/arduino-cli").exists():
     cli = "/Applications/Arduino IDE.app/Contents/Resources/app/lib/backend/resources/arduino-cli"
 if not cli:
     sys.exit("Install Arduino CLI or Arduino IDE, then run this again. See RUNNING.md.")
+
+# Refuse to silently use a different core after Arduino IDE updates it.
+platforms=json.loads(subprocess.check_output([cli,"core","list","--json"],text=True))
+installed=next((p.get("installed_version") for p in platforms.get("platforms",[]) if p.get("id")=="esp32:esp32"),None)
+if installed!=CORE.split("@")[1]:
+    sys.exit("Install the verified core: arduino-cli core install "+CORE+" --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json")
 
 libs = ROOT / "firmware-libs"
 libs.mkdir(exist_ok=True)

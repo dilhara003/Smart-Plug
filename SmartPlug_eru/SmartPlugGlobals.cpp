@@ -96,6 +96,8 @@ Preferences identityPrefs;
 
 String wifiSSID = "";
 String wifiPassword = "";
+String wifiAuthMode = "PERSONAL", wifiEapUsername;
+uint64_t wifiClockEpoch=0;
 
 // ============================================================
 // SETTINGS

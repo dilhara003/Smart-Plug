@@ -34,12 +34,12 @@ bool connectWiFi() {
 
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);     // modem sleep adds 100-300 ms latency
-  WiFi.begin(wifiSSID.c_str(), wifiPassword.c_str());
+  if(!beginSavedWiFi()) return false;
 
   unsigned long start = millis();
 
   while (WiFi.status() != WL_CONNECTED &&
-         millis() - start < WIFI_CONNECT_TIMEOUT) {
+         millis() - start < (wifiAuthMode=="PEAP"?60000UL:WIFI_CONNECT_TIMEOUT)) {
     delay(300);
     Serial.print(".");
   }
@@ -90,8 +90,7 @@ void maintainWiFi() {
   Serial.println("[WIFI] Reconnecting...");
 
   WiFi.disconnect();
-  delay(100);
-  WiFi.begin(wifiSSID.c_str(), wifiPassword.c_str());
+  beginSavedWiFi();
 }
 
 bool requireWebAuth() {
@@ -170,8 +169,12 @@ void handleSetupRoot() {
   }
 
   html += "</select><p>Scanning is asynchronous. Refresh in a few seconds if the list is empty.</p>";
+  html += "<p>Network security</p><select name='auth'><option value='PERSONAL'>Personal / shared password</option><option value='PEAP'>Kelani Wi-Fi: PEAP + MSCHAPv2</option></select>";
+  html += "<p>University username (PEAP only)</p><input name='eapUser' maxlength='64' autocomplete='username' placeholder='Your Kelani Net ID'>";
   html += "<p>Password</p>";
   html += "<input type='password' name='password' placeholder='Wi-Fi password'>";
+  html += "<input id='clockEpoch' type='hidden' name='epoch'><script>document.getElementById('clockEpoch').value=Math.floor(Date.now()/1000)</script>";
+  html += "<p>PEAP verifies the university CA and kln.ac.lk server domain. Enter the Net ID you normally use; no credentials go to Supabase.</p>";
   html += "<button type='submit'>CONNECT</button>";
   html += "</form>";
   html += "<p><a href='/wifi'>Refresh Wi-Fi list</a></p>";
@@ -198,7 +201,12 @@ void handleWiFiConnect() {
   }
 
   enterMaintenance("Wi-Fi configuration");
-  saveWiFiCredentials(ssid,password);
+  String error;
+  String auth=setupServer.arg("auth"); if(auth.length()==0) auth="PERSONAL";
+  uint64_t epoch=strtoull(setupServer.arg("epoch").c_str(),nullptr,10);
+  if(!configureWiFiProfile(ssid,password,auth,setupServer.arg("eapUser"),epoch,error)) {
+    setupServer.send(400,"text/plain",error); return;
+  }
   setupServer.send(200,"text/html","<h2>Wi-Fi saved.</h2><p>Restarting with both outputs OFF. If connection fails, the setup network returns automatically.</p>");
   delay(500);
   ESP.restart();

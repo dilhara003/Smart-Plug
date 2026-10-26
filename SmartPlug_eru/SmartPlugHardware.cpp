@@ -171,6 +171,9 @@ void loadWiFiCredentials() {
   wifiPrefs.begin("wifi", true);
   wifiSSID = wifiPrefs.getString("ssid", "");
   wifiPassword = wifiPrefs.getString("password", "");
+  wifiAuthMode = wifiPrefs.getString("auth", "PERSONAL");
+  wifiEapUsername = wifiPrefs.getString("eapUser", "");
+  wifiClockEpoch = wifiPrefs.getULong64("clock", 0);
   wifiPrefs.end();
 
   Serial.print("[WIFI] Saved SSID: ");
@@ -182,10 +185,14 @@ void saveWiFiCredentials(const String& ssid, const String& password) {
   wifiPrefs.begin("wifi", false);
   wifiPrefs.putString("ssid", ssid);
   wifiPrefs.putString("password", password);
+  wifiPrefs.putString("auth", "PERSONAL");
+  wifiPrefs.putString("eapUser", "");
   wifiPrefs.end();
 
   wifiSSID = ssid;
   wifiPassword = password;
+  wifiAuthMode = "PERSONAL";
+  wifiEapUsername = "";
 
   Serial.println("[WIFI] Credentials saved");
 }

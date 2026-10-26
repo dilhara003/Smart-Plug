@@ -137,6 +137,7 @@ void setup() {
 
   Serial.println();
   Serial.println("SYSTEM READY");
+  Serial.println("[PROVISION] USB Wi-Fi setup ready (ERU_WIFI_STATUS / ERU_WIFI_CONFIG)");
   Serial.println("Real PIR: ENABLED");
   Serial.println("Real ACS712: ENABLED (background task)");
   Serial.println("Cloud: ENABLED (background task, device secret)");
@@ -150,6 +151,7 @@ void setup() {
 void loop() {
   controllerHeartbeat=millis();
   serviceSafetyTrip();
+  processSerialWiFi();
 
 #if DEBUG_LOOP_TIME
   static unsigned long lastLoopTs = 0;

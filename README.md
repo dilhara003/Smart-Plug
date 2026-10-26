@@ -16,7 +16,7 @@ Open **http://127.0.0.1:5173/**. The supplied public configuration points to you
 
 ## Build and upload firmware
 
-The verified build uses ESP32 Arduino core **3.3.10**, **ESP32 Dev Module**, and the **Minimal SPIFFS / 1.9 MB APP with OTA** partition layout on a 4 MB ESP32.
+The verified build uses ESP32 Arduino core **3.3.12**, **ESP32 Dev Module**, and the **Minimal SPIFFS / 1.9 MB APP with OTA** partition layout on a 4 MB ESP32.
 
 ```bash
 npm run firmware:build
