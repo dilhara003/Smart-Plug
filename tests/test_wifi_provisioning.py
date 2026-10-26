@@ -20,6 +20,12 @@ class ProvisioningTests(unittest.TestCase):
         self.assertEqual(json.loads(json.dumps(p))['password'],password)
         self.assertEqual(p['auth'],'PEAP')
 
+    def test_recovery_hotspot_does_not_hide_network_failure(self):
+        message=helper.connection_failure({"disconnect_reason":8,"network_disconnect_reason":23})
+        self.assertIn("802.1X",message)
+        self.assertIn("23",message)
+        self.assertIn("not found",helper.connection_failure({"network_disconnect_reason":201}))
+
     def test_invalid_profiles_are_rejected_before_serial_write(self):
         for values in [('', 'student','pw',1792990000),('x'*33,'student','pw',1792990000),('Kelani_WIFI','','pw',1792990000),('Kelani_WIFI','student','',1792990000),('Kelani_WIFI','student','x'*65,1792990000),('Kelani_WIFI','student','pw',0)]:
             with self.subTest(values=(len(values[0]),len(values[1]),len(values[2]),values[3])):

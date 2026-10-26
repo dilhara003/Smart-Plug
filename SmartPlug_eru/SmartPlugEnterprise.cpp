@@ -5,6 +5,7 @@
 #include <sys/time.h>
 
 static std::atomic<int> lastDisconnectReason{0};
+static std::atomic<int> lastNetworkDisconnectReason{0};
 static void reply(JsonDocument& d) {
   Serial.print("ERU_WIFI_RESULT "); serializeJson(d,Serial); Serial.println();
 }
@@ -17,13 +18,23 @@ static void statusReply() {
   d["ssid"]=wifiSSID; d["auth"]=wifiAuthMode;
   d["ip"]=WiFi.status()==WL_CONNECTED?WiFi.localIP().toString():String("");
   d["cloud_online"]=cloudOnline.load(); d["cloud_realtime"]=cloudSocketOnline.load();
-  d["disconnect_reason"]=lastDisconnectReason.load(); reply(d);
+  d["disconnect_reason"]=lastDisconnectReason.load();
+  d["network_disconnect_reason"]=lastNetworkDisconnectReason.load();
+  d["clock_epoch"]=(uint64_t)time(nullptr); d["setup_ap"]=setupApActive;
+  reply(d);
 }
 bool beginSavedWiFi() {
   static bool eventsRegistered=false;
   if(!eventsRegistered) {
     WiFi.onEvent([](WiFiEvent_t,WiFiEventInfo_t info) {
-      lastDisconnectReason=info.wifi_sta_disconnected.reason;
+      int reason=info.wifi_sta_disconnected.reason;
+      lastDisconnectReason=reason;
+      // Opening the recovery AP/retrying creates a local leave event. Keep
+      // the preceding network failure so it remains available over USB.
+      if(reason!=WIFI_REASON_ASSOC_LEAVE && reason!=WIFI_REASON_AUTH_LEAVE) {
+        lastNetworkDisconnectReason=reason;
+        Serial.printf("[WIFI] Network disconnect reason: %d\n",reason);
+      }
     },ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
     eventsRegistered=true;
   }
@@ -43,7 +54,10 @@ bool beginSavedWiFi() {
   esp_err_t settings[]={
     esp_eap_client_set_ca_cert((const unsigned char*)KELANI_WIFI_CA,strlen(KELANI_WIFI_CA)+1),
     esp_eap_client_set_disable_time_check(false),
-    esp_eap_client_set_domain_name("kln.ac.lk"),
+    // ESP-IDF uses exact TLS hostname matching, unlike Android's domain
+    // suffix field. The Mac's public campus certificate has this CN and its
+    // signature was verified against KELANI_WIFI_CA (valid through 2033).
+    esp_eap_client_set_domain_name("eduroam.kln.ac.lk"),
     esp_eap_client_set_eap_methods(ESP_EAP_TYPE_PEAP),
     esp_eap_client_set_identity((const unsigned char*)wifiEapUsername.c_str(),wifiEapUsername.length()),
     esp_eap_client_set_username((const unsigned char*)wifiEapUsername.c_str(),wifiEapUsername.length()),

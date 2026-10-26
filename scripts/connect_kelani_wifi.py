@@ -14,6 +14,22 @@ import time
 
 PREFIX=b'ERU_WIFI_RESULT '
 
+def connection_failure(state):
+    code=state.get('network_disconnect_reason',state.get('disconnect_reason',0))
+    reasons={
+        2:'Access point authentication expired',
+        15:'Wi-Fi key handshake timed out',
+        23:'University 802.1X authentication failed (credentials or server-certificate validation)',
+        200:'Access point signal was lost',
+        201:'Campus access point not found',
+        202:'Access point authentication failed',
+        203:'Access point association failed',
+        204:'Wi-Fi handshake timed out',
+        205:'Wi-Fi connection failed',
+        210:'No access point with compatible security found',
+    }
+    return reasons.get(code,'Connection not confirmed')+f' (network reason {code}).'
+
 def make_profile(ssid,username,password,epoch):
     if not 1<=len(ssid.encode())<=32: raise ValueError('SSID must be 1–32 bytes')
     if not 1<=len(username.encode())<=64: raise ValueError('Use a university username of 1–64 bytes')
@@ -73,8 +89,9 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port',default='/dev/cu.usbserial-0001')
     parser.add_argument('--ssid',default='Kelani_WIFI')
+    parser.add_argument('--status',action='store_true',help='Read connection diagnostics without prompting or changing settings')
     args=parser.parse_args()
-    if not sys.stdin.isatty(): parser.error('Run this in your own Terminal so the password stays private.')
+    if not args.status and not sys.stdin.isatty(): parser.error('Run this in your own Terminal so the password stays private.')
     print('Keep the Mac connected to Kelani_WIFI. Close Arduino Serial Monitor first.')
     port=None
     try:
@@ -87,6 +104,10 @@ def main():
             if info: break
         if not info or not info.get('enterprise_supported'):
             raise RuntimeError('No enterprise-capable firmware response. Upload the new firmware first; close Serial Monitor and retry.')
+        if args.status:
+            print(json.dumps(info,indent=2))
+            if not info.get('connected'): print(connection_failure(info))
+            return 0
         ssid=args.ssid
         until=time.monotonic()+12
         while time.monotonic()<until:
@@ -109,9 +130,11 @@ def main():
         if saved.get('kind')!='saved': raise RuntimeError('Unexpected device response; retry after the device finishes starting.')
         print('Settings saved. Waiting for enterprise authentication and restart…')
         until=time.monotonic()+100
+        last_state={}
         while time.monotonic()<until:
             port.send('ERU_WIFI_STATUS')
             state=port.read_reply(4,'status')
+            if state and state.get('kind')=='status': last_state=state
             if state and state.get('kind')=='status' and state.get('connected'):
                 print('CONNECTED to',state['ssid'])
                 print('Device IP:',state['ip'])
@@ -119,7 +142,7 @@ def main():
                 print('Open the cloud dashboard and add the LCD claim code if you have not claimed it yet.')
                 return 0
             time.sleep(1)
-        raise RuntimeError('Connection not confirmed. Check the exact Net ID/password, 2.4 GHz coverage and campus device rules. No certificate checks were disabled.')
+        raise RuntimeError(connection_failure(last_state)+' Check the exact Net ID/password, 2.4 GHz coverage and campus device rules. No certificate checks were disabled.')
     except (OSError,ValueError,RuntimeError) as exc:
         print('Setup did not complete:',exc,file=sys.stderr)
         return 1

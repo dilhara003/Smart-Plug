@@ -7,7 +7,7 @@
 - The owner account for the requested email was created without an invitation email. Open `artifacts/OWNER_LOGIN.txt` for the generated application password. It is separate from the database password. Settings > Account lets you change it yourself.
 - Production frontend files are generated in `dist/` by `npm run build`.
 - ESP32 binaries are generated in `artifacts/firmware/` by `npm run firmware:build`.
-- The physical ESP32 has not been flashed or load-tested.
+- Enterprise-capable firmware 1.0.2 has now been installed on the connected ESP32 and its USB status verified. Controlled-load operation remains untested.
 
 The release ZIP deliberately excludes credentials, `node_modules`, build caches, and original firmware backups. Your private login stays on this computer.
 
@@ -79,7 +79,7 @@ For Arduino IDE: open `SmartPlug_eru/SmartPlug_eru.ino`, install the library ver
 
 ## Kelani Wi-Fi / university username and password
 
-Firmware 1.0.1 supports university WPA2-Enterprise PEAP / MSCHAPv2. The university CA is embedded in `KelaniWiFiCA.h`, with server domain `kln.ac.lk` and certificate validity checks enabled. The CA was downloaded from https://rict.kln.ac.lk/images/Kelani_WiFi.cer; its validity is 10 September 2019 to 19 May 2033. See the official guide: https://rict.kln.ac.lk/images/Guidelines/How_to_connect_Kelani_WiFi__New.pdf.
+Firmware 1.0.2 supports university WPA2-Enterprise PEAP / MSCHAPv2. The university CA is embedded in `KelaniWiFiCA.h`, with server hostname `eduroam.kln.ac.lk` and certificate validity checks enabled. The CA was downloaded from https://rict.kln.ac.lk/images/Kelani_WiFi.cer; its validity is 10 September 2019 to 19 May 2033. See the official guide: https://rict.kln.ac.lk/images/Guidelines/How_to_connect_Kelani_WiFi__New.pdf.
 
 Keep your Mac connected to campus Wi-Fi. Close Arduino Serial Monitor, upload the new firmware, and run:
 
@@ -162,3 +162,5 @@ pg_ctl -D /private/tmp/eru-smartplug-pg stop
 ```
 
 The test cluster uses a private directory and Unix socket; it does not expose a TCP database service. Supabase `auth`/`realtime` functions are stand-ins only for these local SQL tests. Live channel authorization was verified separately against the actual service. The broader live synthetic fixture test was not run; physical relay, sensor calibration, disconnect/recovery timing and mains-load behavior still require hardware testing.
+
+Firmware 1.0.2 corrects exact TLS server-name matching. The public campus server certificate stored on the Mac has CN `eduroam.kln.ac.lk`; its signature was verified against the official university CA. Android documentation uses `kln.ac.lk` as a domain suffix; the ESP-IDF API uses an exact hostname. CA, hostname and validity checks remain enabled. To read diagnostics without changing settings: `python3 scripts/connect_kelani_wifi.py --status --port /dev/cu.usbserial-0001`.
