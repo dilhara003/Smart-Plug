@@ -1,4 +1,16 @@
 import { test, expect } from '@playwright/test';
+test('phone-sized controls work when randomUUID is unavailable on LAN HTTP', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    Object.defineProperty(Crypto.prototype, 'randomUUID', { value: undefined });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore the demo' }).click();
+  const power = page.getByRole('switch', { name: 'Plug power', exact: true });
+  await expect(power).toHaveAttribute('aria-checked', 'true');
+  await power.click();
+  await expect(power).toHaveAttribute('aria-checked', 'false');
+});
 test('demo controls, settings, navigation and activity work',async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/');await page.getByRole('button',{name:'Explore the demo'}).click();

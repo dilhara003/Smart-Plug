@@ -33,6 +33,15 @@ npm run preview
 
 The preview URL is printed by Vite, normally http://127.0.0.1:4173/. Run the development server again after building if a previously open dev tab reports outdated optimized dependencies. `npm run dev -- --force` refreshes Vite's dependency cache.
 
+### Show and control the dashboard on a phone
+
+1. Put the Mac and phone on the same trusted local network. A personal hotspot or private router is useful for presentations because campus Wi-Fi can isolate devices. The ESP32 may remain on Kelani Wi-Fi: both browsers and the ESP32 use Supabase over the internet.
+2. On the Mac, run `npm run build` and then `npm run preview:phone`. Leave that Terminal window open and allow incoming connections if macOS asks. This uses port 4173, so an existing development server on port 5173 can keep running.
+3. Use the **Network** URL that Vite prints (for example, `http://192.168.1.23:4173/`) in the phone's browser. Use the Mac's local IP address, not `127.0.0.1` or the ESP32's IP. Sign in with the owner dashboard account; demo mode cannot control the real plug.
+4. Before the presentation, check that the device says **Connected** and test a command with a safe load. The Mac, phone and ESP32 all need internet access; the Mac must stay awake while serving the page. If the URL will not open, check that the devices are on the same network, the Mac firewall allows the connection, and the network does not block local device traffic.
+
+Stop the server with Ctrl+C when finished. For a public URL that works without the Mac, deploy the production `dist/` build to an HTTPS host and configure Supabase Authentication redirect URLs for that host.
+
 The owner dashboard initially has no devices. This is intentional: add your real device with its physical claim code. Demo mode is separate, uses sample data in memory, and never sends real device commands.
 
 For additional user sign-ups or a hosted frontend, set the production Site URL and allowed confirmation redirect URLs in Supabase Authentication settings. The pre-created owner account can sign in directly and does not depend on email confirmation links.
