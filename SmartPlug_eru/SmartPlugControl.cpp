@@ -118,7 +118,7 @@ bool executeCommand(bool iron, const String& action, JsonObject args, String& re
   return applied;
 }
 
-bool updateButton(ButtonState& button, int pin) {
+ButtonEvent updateButton(ButtonState& button, int pin, unsigned long longPressMs) {
 
   bool reading = digitalRead(pin) == HIGH;
 
@@ -137,31 +137,38 @@ bool updateButton(ButtonState& button, int pin) {
 
       if (reading) {
 
-        button.pressStartTime = now;
+        button.pressStartTime = button.lastDebounceTime;
         button.longPressHandled = false;
 
       } else {
 
         // Button released
         if (!button.longPressHandled) {
-          return true;
+          button.longPressHandled = true;
+          if (longPressMs && button.lastDebounceTime - button.pressStartTime >= longPressMs)
+            return ButtonEvent::Long;
+          return ButtonEvent::Short;
         }
       }
     }
   }
 
-  return false;
+  // A slow loop can miss the threshold while held; the release path above
+  // still classifies that press using the raw release edge time.
+  if (reading && button.stableState && longPressMs && !button.longPressHandled &&
+      now - button.pressStartTime >= longPressMs) {
+    button.longPressHandled = true;
+    return ButtonEvent::Long;
+  }
+  return ButtonEvent::None;
 }
 
 void processResetButton() {
 
-  unsigned long now = millis();
+  ButtonEvent event = updateButton(resetButton, RESET_BUTTON_PIN, RESET_LONG_PRESS_MS);
 
   // Long press = setup mode
-  if (resetButton.stableState && !resetButton.longPressHandled &&
-      now - resetButton.pressStartTime >= RESET_LONG_PRESS_MS) {
-
-    resetButton.longPressHandled = true;
+  if (event == ButtonEvent::Long) {
 
     Serial.println("[BUTTON] Long press - setup mode");
 
@@ -171,7 +178,7 @@ void processResetButton() {
   }
 
   // Short press = restart
-  if (updateButton(resetButton, RESET_BUTTON_PIN)) {
+  if (event == ButtonEvent::Short) {
 
     Serial.println("[BUTTON] Restart");
 

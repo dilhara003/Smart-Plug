@@ -147,10 +147,10 @@ void updateLCD() {
 
 void processMenuButton() {
   unsigned long now = millis();
+  ButtonEvent event = updateButton(powerButton, POWER_BUTTON_PIN, LONG_PRESS_MS);
 
   // Long press opens/closes menu. Healthy BMI160 opens the section selector first.
-  if (powerButton.stableState && !powerButton.longPressHandled && now - powerButton.pressStartTime >= LONG_PRESS_MS) {
-    powerButton.longPressHandled = true;
+  if (event == ButtonEvent::Long) {
     lastMenuActivity = now;
     if (menuOpen) closeMenu();
     else {
@@ -165,7 +165,7 @@ void processMenuButton() {
     return;
   }
 
-  if (!updateButton(powerButton, POWER_BUTTON_PIN)) return;
+  if (event != ButtonEvent::Short) return;
   lastMenuActivity = now;
 
   if (!menuOpen) {
@@ -209,7 +209,7 @@ void processMenuButton() {
     if (menuIndex == 1 || (menuIndex >= 6 && menuIndex <= 8)) menuIndex++;
     else if (menuIndex == 0) {
       if (!menuEditing) menuEditing = true;
-      else { nextMode(); menuEditing = false; saveSettings(); }
+      else { menuEditing = false; saveSettings(); }
     } else if (menuIndex >= 1 && menuIndex <= 5) {
       if (!menuEditing) menuEditing = true;
       else { menuEditing = false; saveSettings(); }
@@ -225,8 +225,8 @@ void processMenuButton() {
 }
 
 void processUpDownButtons() {
-  bool up = updateButton(upButton, UP_BUTTON_PIN);
-  bool down = updateButton(downButton, DOWN_BUTTON_PIN);
+  bool up = updateButton(upButton, UP_BUTTON_PIN) == ButtonEvent::Short;
+  bool down = updateButton(downButton, DOWN_BUTTON_PIN) == ButtonEvent::Short;
   if (!up && !down) return;
   int direction = up ? -1 : 1;
 

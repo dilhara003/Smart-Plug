@@ -44,6 +44,7 @@ struct ButtonState {
   unsigned long pressStartTime = 0;
   bool longPressHandled = false;
 };
+enum class ButtonEvent : uint8_t { None, Short, Long };
 
 enum RGBColor { RGB_OFF, RGB_RED, RGB_GREEN, RGB_BLUE, RGB_YELLOW, RGB_CYAN, RGB_MAGENTA, RGB_WHITE };
 
@@ -189,7 +190,7 @@ void processIronController();
 void setIronPower(bool state, const String& reason);
 void handleIronPowerCommand();
 void handleIronSettings();
-bool updateButton(ButtonState& button, int pin);
+ButtonEvent updateButton(ButtonState& button, int pin, unsigned long longPressMs = 0);
 void processResetButton();
 String buildPayload(bool full);
 void applyCloudSnapshot();
